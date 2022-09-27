@@ -43,6 +43,8 @@ bool MyClass1::validEquation(string& line){
                 ++j;
             }
             if(cnt<0) return false;
+            if(seen.count(variable)) return false;
+            seen.insert(variable);
             i=j;
         }
         else if(islower(ch)){
