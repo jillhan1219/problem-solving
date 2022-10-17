@@ -59,6 +59,7 @@ struct Token {
 	string name;
 	Token(char ch) :kind(ch), value(0) { }
 	Token(char ch, double val) :kind(ch), value(val) { }
+	Token(char ch, string n) :kind(ch), name(n) { }//bug1: 少了一个构造函数
 };
 
 class Token_stream {
@@ -94,6 +95,7 @@ Token Token_stream::get()
 	case '%':
 	case ';':
 	case '=':
+	case '!':
 		return Token(ch);
 	case '.':
 	case '0':
@@ -115,10 +117,10 @@ Token Token_stream::get()
 		if (isalpha(ch)) {
 			string s;
 			s += ch;
-			while (cin.get(ch) && (isalpha(ch) || isdigit(ch))) s = ch;
+			while (cin.get(ch) && (isalpha(ch) || isdigit(ch))) s += ch;//bug2
 			cin.unget();
 			if (s == "let") return Token(let);
-			if (s == "quit") return Token(name);
+			if (s == "quit") return Token(quit);//bug3
 			return Token(name, s);
 		}
 		error("Bad token");
@@ -173,6 +175,7 @@ bool is_declared(string s)
 Token_stream ts;
 
 double expression();
+double primary1();
 
 double primary()
 {
@@ -182,9 +185,10 @@ double primary()
 	{	double d = expression();
 	t = ts.get();
 	if (t.kind != ')') error("'(' expected");
+    return d;//bug4: no return
 	}
 	case '-':
-		return -primary();
+		return -primary1();
 	case number:
 		return t.value;
 	case name:
@@ -194,17 +198,48 @@ double primary()
 	}
 }
 
+bool isInt(double a)
+{
+	if(a-(int)a==0)
+		return true;
+	return false;
+}
+
+double primary1()
+{
+	double left=primary();
+	Token t=ts.get();
+	while(true)
+	{
+		if(t.kind=='!')
+		{
+			if(left<0||(!isInt(left)))
+				error("i!: invalid factorial");
+			if(left==0)
+				left=1;
+			for(int i=left-1;i>0;i--)
+				left*=i;
+			t=ts.get();
+		}
+		else
+		{
+			ts.unget(t);
+			return left;
+		}
+	}
+}
+
 double term()
 {
-	double left = primary();
+	double left = primary1();
 	while (true) {
 		Token t = ts.get();
 		switch (t.kind) {
 		case '*':
-			left *= primary();
+			left *= primary1();
 			break;
 		case '/':
-		{	double d = primary();
+		{	double d = primary1();
 		if (d == 0) error("divide by zero");
 		left /= d;
 		break;
