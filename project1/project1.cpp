@@ -18,7 +18,7 @@
             (bs@cs.tamu.edu) Spring 2004.
 
     This program implements a basic expression calculator.
-    Input from cin; output to cout.
+    Input from iss; output to cout.
 
     The grammar for input is:
 
@@ -51,9 +51,10 @@
         floating-point-literal
 
 
-        Input comes from cin through the Token_stream called ts.
+        Input comes from iss through the Token_stream called ts.
 */
 
+istringstream iss;          // use iss instead of cin to get expression
 //------------------------------------------------------------------------------
 
 const char number = '8';    // t.kind==number means that t is a number Token
@@ -78,7 +79,7 @@ public:
 
 class Token_stream {
 public:
-    Token_stream();   // make a Token_stream that reads from cin
+    Token_stream();   // make a Token_stream that reads from iss
     Token get();      // get a Token (get() is defined elsewhere)
     void putback(Token t);    // put a Token back
     void ignore(char c);      // discard tokens up to an including a c
@@ -107,7 +108,7 @@ void Token_stream::putback(Token t)
 
 //------------------------------------------------------------------------------
 
-Token Token_stream::get() // read characters from cin and compose a Token
+Token Token_stream::get() // read characters from iss and compose a Token
 {
     if (full) {         // check if we already have a Token ready
         full=false;
@@ -115,7 +116,7 @@ Token Token_stream::get() // read characters from cin and compose a Token
     }
 
     char ch;
-    cin >> ch;          // note that >> skips whitespace (space, newline, tab, etc.)
+    iss >> ch;          // note that >> skips whitespace (space, newline, tab, etc.)
 
     switch (ch) {
     case quit:
@@ -133,9 +134,9 @@ Token Token_stream::get() // read characters from cin and compose a Token
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':    // numeric literal
     {
-        cin.putback(ch);// put digit back into the input stream
+        iss.putback(ch);// put digit back into the input stream
         double val;
-        cin >> val;     // read a floating-point number
+        iss >> val;     // read a floating-point number
         return Token(number,val);
     }
     default:
@@ -157,7 +158,7 @@ void Token_stream::ignore(char c)
 
     // now seach input:
     char ch = 0;
-    while (cin>>ch)
+    while (iss>>ch)
         if (ch==c) return;
 }
 
@@ -232,6 +233,8 @@ double factorial()
 	}
 }
 //------------------------------------------------------------------------------
+
+
 // deal with *, /, and %
 double term()
 {
@@ -302,20 +305,194 @@ void clean_up_mess()
 
 //------------------------------------------------------------------------------
 
+map<string,vector<string>> expressions;
+
+bool getIndex(string& input,int& start,string& index)
+{
+    index="";
+    while(isspace(input[start]))
+        start++;
+    if(input[start]!='[')
+        return false;
+    else
+    {
+        while(true)
+        {
+            if(input[start]=='[')
+            {
+                start++;
+                while(isspace(input[start]))
+                    start++;
+            }
+            else if(isspace(input[start]))
+            {
+                int j=start;
+                while(isspace(input[j]))
+                    j++;
+                if(input[j] == ']')
+                    start=j;
+                else
+                {
+                    while(start<=j)
+                    {
+                        index+=input[start];
+                        start++;
+                    }
+                }
+            }
+            else if(input[start]==']')
+            {
+                start++;     
+                return true;
+            }
+            else
+                index+=input[start++];
+        }
+    }
+}
+
+
+bool getExprn(string& input, int& start, string& exprn)
+{
+    exprn="";
+    while(isspace(input[start]))
+        start++;
+    while(input[start]!=';')
+    {
+        if(isalpha(input[start]))
+        {
+            while(input[start]!='['&&input[start]!='q')
+                start++;
+            exprn="";
+            return false;
+        }
+        if(isspace(input[start]))
+        {
+            int j=start;
+            while(isspace(input[j]))
+                j++;
+            if(input[j] == ';')
+                start=j;
+            else
+            {
+                while(start<=j)
+                {
+                    exprn+=input[start];
+                    start++;
+                }
+            }
+            continue;
+        }
+        exprn+=input[start];
+        start++;
+    }
+    exprn+=input[start++];    //add ; to the end
+    while (isspace(input[start]))
+        start++;
+    if(input[start]=='['||input[start]=='q')
+        return true;
+    else
+    {
+        while(input[start]!='['&&input[start]!='q')
+        start++;
+        exprn="";
+        return false;
+    }
+}
+
+void getExpressions()
+{
+    string input;
+    getline(cin,input);
+    int len=input.length();
+    if(input.find('q')>=len)
+        input+='q';
+    string index,exprn;
+    int start=0;
+    while(input[start]!='q')
+    {
+        bool flag_id,flag_ex;
+        flag_id=getIndex(input,start,index);
+        flag_ex=getExprn(input,start,exprn);
+        if(flag_id)
+            expressions[index].push_back(exprn);
+    }
+}
+
 void calculate()
 {
-    while (cin)
-      try {
-        cout << prompt;
-        Token t = ts.get();
-        while (t.kind == print) t=ts.get();    // first discard all "prints"
-        if (t.kind == quit) return;        // quit
-        ts.putback(t);
-        cout << result << expression() << endl;
+    for(auto& it_index:expressions)
+    {
+        for(auto it_exprn=it_index.second.begin();it_exprn!=it_index.second.end();)
+        // use iterator for erase, cannot ++it_index as we might erase if it is invalid
+        {
+            iss.clear();
+            iss.str(*it_exprn);
+            while (iss)
+            try {
+                //cout << prompt;
+                Token t = ts.get();
+                while (t.kind == print) t=ts.get();    // first discard all "prints"
+                if (t.kind == quit) return;        // quit
+                ts.putback(t);
+                double ans=expression();
+                (*it_exprn).pop_back();
+                *it_exprn+='=';
+                if(isInt(ans))
+                    *it_exprn+=to_string((int)ans);
+                else
+                {
+                    ostringstream convert;
+                    convert<<setprecision(6)<<ans;
+                    *it_exprn+=convert.str();
+                }
+                it_exprn++;
+                clean_up_mess();
+                break;
+                //cout << result << expression() << endl;
+            }
+            catch (exception& e) {
+                //cout << e.what() << endl;        // write error message
+                it_index.second.erase(it_exprn);   // delete the illegal expression
+                clean_up_mess();
+                iss.clear();
+                break;   //不加break iss判断仍为true
+            }
+        }
     }
-    catch (exception& e) {
-        cout << e.what() << endl;        // write error message
-        clean_up_mess();
+}
+
+void display()
+{
+    string inquire;
+    string in;
+    if(getline(cin,in))
+    {
+        in='['+in+']';
+        int start=0;
+        getIndex(in,start,inquire);
+        cout<<"["<<inquire<<"]";
+        if(expressions.find(inquire)!=expressions.end())
+        {
+            sort(expressions[inquire].begin(),expressions[inquire].end());
+            for(auto& it_exprn:expressions[inquire])
+            {
+                cout<<"\n"<<it_exprn;
+            }
+        }
+    }
+    else
+    {
+        for(auto it_index=expressions.begin();it_index!=expressions.end();++it_index)
+        // 判断是否为第一个
+        {
+            if(it_index!=expressions.begin())
+                cout<<"\n";
+            cout<<"["<<it_index->first<<"]";
+            sort(expressions[it_index->first].begin(),expressions[it_index->first].end());
+            for(auto& it_exprn:it_index->second)
+                cout<<"\n"<<it_exprn;
+        }
     }
 }
 
@@ -323,15 +500,17 @@ void calculate()
 
 int main()
 try {
+    getExpressions();
     calculate();
-    keep_window_open();    // cope with Windows console mode
+    display();
+    //keep_window_open();    // cope with Windows console mode
     return 0;
 }
-catch (runtime_error& e) {
-    cout << e.what() << endl;
-    keep_window_open("~~");
-    return 1;
-}
+//catch (runtime_error& e) {
+    //cout << e.what() << endl;
+    //keep_window_open("~~");
+    //return 1;
+//}
 catch (...) {
     cout << "exception \n";
     keep_window_open("~~");
