@@ -305,8 +305,12 @@ void clean_up_mess()
 
 //------------------------------------------------------------------------------
 
-map<string,vector<string>> expressions;
+map<string,vector<string>> expressions;   
+//索引作为key 索引中的表达式组成vector作为value
 
+//------------------------------------------------------------------------------
+
+//get index
 bool getIndex(string& input,int& start,string& index)
 {
     index="";
@@ -321,7 +325,7 @@ bool getIndex(string& input,int& start,string& index)
             if(input[start]=='[')
             {
                 start++;
-                while(isspace(input[start]))
+                while(isspace(input[start]))   //跳过开头空格
                     start++;
             }
             else if(isspace(input[start]))
@@ -329,7 +333,7 @@ bool getIndex(string& input,int& start,string& index)
                 int j=start;
                 while(isspace(input[j]))
                     j++;
-                if(input[j] == ']')
+                if(input[j] == ']')    //检查是否为末尾空格
                     start=j;
                 else
                 {
@@ -350,8 +354,11 @@ bool getIndex(string& input,int& start,string& index)
         }
     }
 }
+//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
 
+//获取表达式
 bool getExprn(string& input, int& start, string& exprn)
 {
     exprn="";
@@ -359,7 +366,7 @@ bool getExprn(string& input, int& start, string& exprn)
         start++;
     while(input[start]!=';')
     {
-        if(isalpha(input[start]))
+        if(isalpha(input[start]))   //读取到字母则跳过该表达式并报错
         {
             while(input[start]!='['&&input[start]!='q')
                 start++;
@@ -389,23 +396,28 @@ bool getExprn(string& input, int& start, string& exprn)
     exprn+=input[start++];    //add ; to the end
     while (isspace(input[start]))
         start++;
-    if(input[start]=='['||input[start]=='q')
+    if(input[start]=='['||input[start]=='q')  //读到下一个[或末尾的q则返回真
         return true;
     else
     {
         while(input[start]!='['&&input[start]!='q')
         start++;
-        exprn="";
+        exprn="";   //不合法表达式，比如有两个; 则跳过并清空exprn内容
         return false;
     }
 }
 
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+
+// read the whole line and get all index and expressions
 void getExpressions()
 {
     string input;
     getline(cin,input);
     int len=input.length();
-    if(input.find('q')>=len)
+    if(input.find('q')>=len)  // 处理末尾没有q的情况
         input+='q';
     string index,exprn;
     int start=0;
@@ -414,11 +426,16 @@ void getExpressions()
         bool flag_id,flag_ex;
         flag_id=getIndex(input,start,index);
         flag_ex=getExprn(input,start,exprn);
-        if(flag_id)
+        if(flag_id)   //其他不合法表达式在计算其中处理
             expressions[index].push_back(exprn);
     }
 }
 
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+
+//计算所有表达式
 void calculate()
 {
     for(auto& it_index:expressions)
@@ -436,14 +453,14 @@ void calculate()
                 if (t.kind == quit) return;        // quit
                 ts.putback(t);
                 double ans=expression();
-                (*it_exprn).pop_back();
-                *it_exprn+='=';
+                (*it_exprn).pop_back();  //delete the ;
+                *it_exprn+='=';   //add =
                 if(isInt(ans))
-                    *it_exprn+=to_string((int)ans);
+                    *it_exprn+=to_string((int)ans);  //convert to int
                 else
                 {
                     ostringstream convert;
-                    convert<<setprecision(6)<<ans;
+                    convert<<setprecision(6)<<ans;  //保留6位有效数字
                     *it_exprn+=convert.str();
                 }
                 it_exprn++;
@@ -462,6 +479,11 @@ void calculate()
     }
 }
 
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+
+//print all expressions
 void display()
 {
     string inquire;
