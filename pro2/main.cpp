@@ -6,6 +6,18 @@
 
 using namespace std;
 
+double results(vector<double>& coffes,int& order,int& x)
+{
+    int i=1;
+    double result=0;
+    for(int j=0;j<=order;++j)
+    {
+        result+=coffes[j]*i;
+        i*=x;
+    }
+    return result;
+}
+
 int main()
 {
     vector<double> data;
@@ -36,33 +48,42 @@ int main()
         min_temp.push_back(minT);
     }
 
+    int order;
+    cin>>order;
+
     vector<double> coeffs_max;
     vector<double> coeffs_min;
     PolynomialRegression<double> predict_max;
     PolynomialRegression<double> predict_min;
-    predict_max.fitIt(date,max_temp,2,coeffs_max);
-    predict_min.fitIt(date,min_temp,2,coeffs_min);
+    predict_max.fitIt(date,max_temp,order,coeffs_max);
+    predict_min.fitIt(date,min_temp,order,coeffs_min);
 
-    for(int i=61;i<=66;++i)
+    ofstream ofs;
+    ofs.open("output.txt",ios::app);
+    ofs<<order<<endl;
+
+    for(int i=59;i<=66;++i)
     {
-        double tmax=coeffs_max[2]*i*i+coeffs_max[1]*i+coeffs_max[0];
-        double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0];
-        cout<<tmax<<" "<<tmin<<endl;
+        ofs<<i<<" ";
+        double tmax=results(coeffs_max,order,i);
+        double tmin=results(coeffs_min,order,i);
+        //double tmin=coeffs_min[1]*i+coeffs_min[0];
+        //double tmax=coeffs_max[2]*i*i+coeffs_max[1]*i+coeffs_max[0];
+        //double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0]+coeffs_min[3]*i*i*i;
+        ofs<<tmax<<" "<<tmin<<endl;
+    }
+    for(int i=-3;i<=-1;++i)
+    {
+        ofs<<i<<" ";
+        double tmax=results(coeffs_max,order,i);
+        double tmin=results(coeffs_min,order,i);
+        //double tmax=coeffs_max[2]*i*i+coeffs_max[1]*i+coeffs_max[0];
+        //double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0];
+        //double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0]+coeffs_min[3]*i*i*i;
+        ofs<<tmax<<" "<<tmin<<endl;
     }
 
-    //cout<<max_temp[60]<<min_temp [60]<<endl;
-    //for(int i=0;i<n;++i)
-    //{
-        //x.push_back(i+1);
-        //double temp;
-        //cin>>temp;
-        //y.push_back(temp);
-    //}
-    //vector<double> results;
-    //PolynomialRegression<double> test;
-    //test.fitIt(x,y,2,results);
-    //for(auto& it:results)
-    //cout<<it<<" ";
-    //cout<<endl;
+    ifs.close();
+    ofs.close();
     return 0;
 }
