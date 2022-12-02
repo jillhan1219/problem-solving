@@ -67,9 +67,6 @@ int main()
         ofs<<i<<" ";
         double tmax=results(coeffs_max,order,i);
         double tmin=results(coeffs_min,order,i);
-        //double tmin=coeffs_min[1]*i+coeffs_min[0];
-        //double tmax=coeffs_max[2]*i*i+coeffs_max[1]*i+coeffs_max[0];
-        //double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0]+coeffs_min[3]*i*i*i;
         ofs<<tmax<<" "<<tmin<<endl;
     }
     for(int i=-3;i<=-1;++i)
@@ -77,9 +74,6 @@ int main()
         ofs<<i<<" ";
         double tmax=results(coeffs_max,order,i);
         double tmin=results(coeffs_min,order,i);
-        //double tmax=coeffs_max[2]*i*i+coeffs_max[1]*i+coeffs_max[0];
-        //double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0];
-        //double tmin=coeffs_min[2]*i*i+coeffs_min[1]*i+coeffs_min[0]+coeffs_min[3]*i*i*i;
         ofs<<tmax<<" "<<tmin<<endl;
     }
 
