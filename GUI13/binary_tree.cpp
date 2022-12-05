@@ -47,3 +47,32 @@ void binary_tree::draw_lines()const
         position[i*2+2].x,position[i*2+2].y);
     }
 }
+
+
+void binary_tree_tri::draw_tri(Point center) const
+{
+    Point p1(center.x,center.y-10);
+    Point p2(center.x-5,center.y+3);
+    Point p3(center.x+5,center.y+3);
+    fl_line(p1.x,p1.y,p2.x,p2.y);
+    fl_line(p1.x,p1.y,p3.x,p3.y);
+    fl_line(p2.x,p2.y,p3.x,p3.y);
+}
+
+
+void binary_tree_tri::draw_lines() const
+{
+
+    for(auto& it:position)
+    {
+        draw_tri(it);
+    }
+    int fathers=pow(2,level-1)-1;
+    for(int i=0;i<fathers;++i)
+    {
+        fl_line(position[i].x,position[i].y,
+        position[i*2+1].x,position[i*2+1].y);
+        fl_line(position[i].x,position[i].y,
+        position[i*2+2].x,position[i*2+2].y);
+    }
+}
