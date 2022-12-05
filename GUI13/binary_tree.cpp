@@ -9,7 +9,10 @@ using namespace std;
 
 binary_tree::binary_tree(int n):level(n)
 {
-    height=(400-40)/(n-1);
+    if(n==1)
+        height=0;
+    else
+        height=(400-40)/(n-1);
     number=pow(2,n)-1;
     int floor=0;
     int y=20;
